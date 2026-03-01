@@ -1,7 +1,7 @@
 import urwid
 
-from noteboard.models import ItemModel
-from noteboard.utils import date_parse
+from knoteboard.models import ItemModel
+from knoteboard.utils import date_parse
 
 
 class Item:

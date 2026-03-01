@@ -1,8 +1,7 @@
 import urwid
-
-from noteboard.components.dialog import Dialog, DialogButtons
-from noteboard.components.item import Item, ItemForm
-from noteboard.models import BoardModel, ColumnModel, ItemModel
+from knoteboard.components.dialog import Dialog, DialogButtons
+from knoteboard.components.item import Item, ItemForm
+from knoteboard.models import BoardModel, ColumnModel, ItemModel
 
 
 class Board:

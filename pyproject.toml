@@ -1,7 +1,7 @@
 [project]
-name = "noteboard"
+name = "knoteboard"
 version = "0.1.0"
-description = "noteboard – is a small command-line personal ticket management tool that provides a Kanban-style board"
+description = "knoteboard – is a small command-line personal ticket management tool that provides a Kanban-style board"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

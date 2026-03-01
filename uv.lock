@@ -48,7 +48,7 @@ wheels = [
 ]
 
 [[package]]
-name = "noteboard"
+name = "knoteboard"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

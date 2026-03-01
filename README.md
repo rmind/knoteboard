@@ -1,9 +1,9 @@
-# noteboard
+# knoteboard
 
-**noteboard** is a small command-line personal ticket management tool that
+**knoteboard** is a small command-line personal ticket management tool that
 provides a Kanban-style board.
 
-Upstream at: https://github.com/rmind/noteboard
+Upstream at: https://github.com/rmind/knoteboard
 
 ## Introduction
 
@@ -15,5 +15,5 @@ be used for **sticky notes** with reminders or it may be used as a basic
 
 Local:
 ```shell
-uv run python -m noteboard
+uv run python -m knoteboard
 ```

@@ -5,17 +5,17 @@ from tempfile import NamedTemporaryFile
 
 from dateparser import DateDataParser
 
-from noteboard.models import AppDataModel
+from knoteboard.models import AppDataModel
 
 
 class Storage:
-    FILE_NAME = "noteboard.json"
+    FILE_NAME = "knoteboard.json"
 
     base_path: Path
 
     def __init__(self, path: str | None = None):
-        path = path or getenv("NOTEBOARD_PATH") or Path.home()
-        self.base_path = Path(path) / ".noteboard"
+        path = path or getenv("KNOTEBOARD_PATH") or Path.home()
+        self.base_path = Path(path) / ".knoteboard"
 
     def title(self):
         return self.base_path.parent.absolute().name
@@ -49,7 +49,7 @@ class Storage:
 
         # Create a temporary file with the state.
         temp_file = NamedTemporaryFile(
-            prefix="noteboard.data.", dir=state_dir, delete=False
+            prefix=f"{self.FILE_NAME}.", dir=state_dir, delete=False
         )
 
         # Write, sync, rename.

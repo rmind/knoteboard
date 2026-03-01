@@ -2,7 +2,7 @@ from datetime import datetime
 
 import urwid
 
-from noteboard.utils import deadline_to_color, human_due_days
+from knoteboard.utils import deadline_to_color, human_due_days
 
 
 class EventPanel:

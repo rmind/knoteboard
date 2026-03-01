@@ -1,6 +1,6 @@
 import click
 
-from noteboard.app import App
+from knoteboard.app import App
 
 
 @click.command()

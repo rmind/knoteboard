@@ -1,15 +1,15 @@
 import urwid
 
-from noteboard.components import (
+from knoteboard.components import (
     Board,
     DialogLauncher,
     EventPanel,
     StatusBar,
     info_msg,
 )
-from noteboard.models import AppDataModel
-from noteboard.palette import Palette
-from noteboard.storage import Storage, get_storage
+from knoteboard.models import AppDataModel
+from knoteboard.palette import Palette
+from knoteboard.storage import Storage, get_storage
 
 
 class App:
