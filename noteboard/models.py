@@ -1,6 +1,9 @@
 from datetime import datetime
-from uuid import uuid7
 
+try:
+    from uuid import uuid7 as uuid
+except ImportError:
+    from uuid import uuid4 as uuid
 from pydantic import BaseModel, model_validator
 
 
@@ -10,7 +13,7 @@ class ItemModel(BaseModel):
     date: datetime | None = None
 
     # Metadata:
-    id: str = str(uuid7())
+    id: str = str(uuid())
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
     completed_at: datetime | None = None

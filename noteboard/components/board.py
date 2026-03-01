@@ -51,7 +51,7 @@ class Board:
         self.focus_idx = 0
         self._refresh_all()
 
-    def get_items(self) -> list[Items]:
+    def get_items(self) -> list[Item]:
         return [item for column_items in self.items for item in column_items]
 
     #
