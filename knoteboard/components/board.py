@@ -1,4 +1,5 @@
 import urwid
+
 from knoteboard.components.dialog import Dialog, DialogButtons
 from knoteboard.components.item import Item, ItemForm
 from knoteboard.models import BoardModel, ColumnModel, ItemModel
