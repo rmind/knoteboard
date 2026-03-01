@@ -1,0 +1,209 @@
+import urwid
+
+from noteboard.components.dialog import Dialog, DialogButtons
+from noteboard.components.item import Item, ItemForm
+from noteboard.models import BoardModel, ColumnModel, ItemModel
+
+
+class Board:
+    """
+    Kanban-like board of items (tickets / notes).
+    """
+
+    columns: list[str]
+    items: list[list[Item]]
+    deleted: list[Item]
+
+    focus_col: int
+    focus_idx: int
+
+    changed: bool
+
+    def __init__(self, app, data: BoardModel = None):
+        self.app = app
+
+        # Initialize columns and items.
+        self.columns = [column.label for column in data.columns]
+        self.items = [
+            [Item(item) for item in column.items] for column in data.columns
+        ]
+        self.deleted = data.deleted or []
+        self.changed = False
+
+        #
+        # Setup the widget.
+        #
+        self.listwalkers = [
+            urwid.SimpleFocusListWalker([]) for _ in self.columns
+        ]
+        self.column_frames = []
+        for i, title in enumerate(self.columns):
+            header = urwid.AttrMap(
+                urwid.Text(("header", f" {title} "), align="center"), "header"
+            )
+            body = urwid.ListBox(self.listwalkers[i])
+            frame = urwid.Frame(urwid.AttrMap(body, "column"), header=header)
+            self.column_frames.append(frame)
+        self.widget = urwid.Columns(self.column_frames, dividechars=1)
+
+        # Load the items.
+        self.focus_col = 0
+        self.focus_idx = 0
+        self._refresh_all()
+
+    def get_items(self) -> list[Items]:
+        return [item for column_items in self.items for item in column_items]
+
+    #
+    # Rendering
+    #
+
+    def _refresh_column(self, col: int):
+        widgets = []
+        for i, item in enumerate(self.items[col]):
+            focused = (col == self.focus_col) and (i == self.focus_idx)
+            widgets.append(item.get_widget(focused=focused))
+
+        walker = self.listwalkers[col]
+        walker[:] = widgets
+        if col == self.focus_col:
+            walker.set_focus(self.focus_idx)
+
+    def _update_column_headers(self):
+        for i, frame in enumerate(self.column_frames):
+            attr = "header-focus" if i == self.focus_col else "header"
+            title = (
+                f"{self.columns[i]}" if i == self.focus_col else self.columns[i]
+            )
+            frame.header = urwid.AttrMap(
+                urwid.Text((attr, f" {title}"), align="center"), attr
+            )
+
+    def _refresh_all(self):
+        self.widget.focus_position = self.focus_col
+        for i, _ in enumerate(self.columns):
+            self._refresh_column(i)
+        self._update_column_headers()
+
+    #
+    # Item management
+    #
+
+    def _on_submit(self, data: ItemModel, edit: bool):
+        if edit:
+            # Update the item.
+            item = self.items[self.focus_col][self.focus_idx]
+            item.update(data)
+        else:
+            # Add item the item.
+            self.items[self.focus_col].append(Item(data))
+            self.focus_idx = len(self.items[self.focus_col]) - 1
+
+        self._refresh_column(self.focus_col)
+        self.changed = True
+        self.app.pop_widget()
+
+    def _remove_item(self, col: int, idx: int):
+        # Remove the item.
+        if self.items and (col_items := self.items[col]):
+            item = col_items.pop(idx)
+            self.deleted.append(item.get_model())
+            self.focus_idx = max(min(self.focus_idx, len(col_items) - 1), 0)
+            self._refresh_column(col)
+            self.changed = True
+        self.app.close_dialog()
+
+    #
+    # Item forms
+    #
+
+    def create_item(self):
+        form = ItemForm(
+            on_submit=self._on_submit,
+            on_cancel=lambda: self.app.pop_widget(),
+        )
+        self.app.push_widget(form, ItemForm.STATUS_MSG)
+
+    def edit_item(self):
+        current_item = self.items[self.focus_col][self.focus_idx]
+        form = ItemForm(
+            on_submit=self._on_submit,
+            on_cancel=lambda: self.app.pop_widget(),
+            edit_item=current_item.data,
+        )
+        self.app.push_widget(form, ItemForm.STATUS_MSG)
+
+    def delete_item(self):
+        if not self.items[self.focus_col]:
+            return
+        options = [
+            DialogButtons(
+                text="OK",
+                on_press=lambda _: self._remove_item(
+                    self.focus_col, self.focus_idx
+                ),
+                keys=["d"],
+            ),
+            DialogButtons(
+                text="Cancel",
+                on_press=lambda _: self.app.close_dialog(),
+                keys=["esc"],
+            ),
+        ]
+        self.app.open_dialog(
+            Dialog("Delete the item?", options),
+            ["[d] - delete", "[Esc] - cancel"],
+        )
+
+    #
+    # Navigation and moving
+    #
+
+    def switch_item(self, column: int = 0, index: int = 0):
+        new_focus_col = self.focus_col + column
+        self.focus_col = max(min(new_focus_col, len(self.columns) - 1), 0)
+
+        nitems = len(self.items[self.focus_col])
+        new_focus_idx = self.focus_idx + index
+        self.focus_idx = max(min(new_focus_idx, nitems - 1), 0)
+
+        self._refresh_all()
+
+    def move_item(self, column: int = 0, index: int = 0):
+        if not self.items[self.focus_col]:
+            return
+
+        # Capture the current item and switch to the target position.
+        remove_col, remove_idx = self.focus_col, self.focus_idx
+        item = self.items[remove_col][remove_idx]
+        self.switch_item(column, index)
+
+        #
+        # Check that the target position is actually different.  Move.
+        # However, if moving to a different column, then put at the top.
+        #
+        if (remove_col, remove_idx) != (self.focus_col, self.focus_idx):
+            self.items[remove_col].pop(remove_idx)
+            self.focus_idx = 0 if column else self.focus_idx
+            self.items[self.focus_col].insert(self.focus_idx, item)
+            self._refresh_all()
+            self.changed = True
+
+    #
+    # Other
+    #
+
+    def export(self) -> BoardModel:
+        return BoardModel(
+            columns=[
+                ColumnModel(
+                    label=column_title,
+                    items=[item.get_model() for item in self.items[i]],
+                )
+                for i, column_title in enumerate(self.columns)
+            ],
+            deleted=self.deleted,
+        )
+
+    def get_widget(self):
+        return self.widget
