@@ -1,6 +1,6 @@
 [project]
 name = "knoteboard"
-version = "0.1.0"
+version = "0.1.1"
 description = "knoteboard – is a small command-line personal ticket management tool that provides a Kanban-style board"
 readme = "README.md"
 license = "MIT"
