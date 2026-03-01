@@ -3,6 +3,7 @@ name = "knoteboard"
 version = "0.1.0"
 description = "knoteboard – is a small command-line personal ticket management tool that provides a Kanban-style board"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.3.1",
@@ -10,6 +11,10 @@ dependencies = [
     "pydantic>=2.12.5",
     "urwid>=3.0.3",
 ]
+keywords = ["notes", "kanban", "board", "sticky notes"]
+
+[project.urls]
+Repository = "https://github.com/rmind/knoteboard"
 
 [dependency-groups]
 dev = [

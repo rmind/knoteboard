@@ -13,9 +13,9 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python environment with uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - name: Set up Python environment with uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -29,12 +29,17 @@ jobs:
     name: Build the package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python environment with uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.x"
+          python-version-file: "pyproject.toml"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
           enable-cache: true
+      - name: Ensure clean repository
+        run: git clean -dfx
       - name: Build the package (sdist and wheel)
         run: uv build
       - name: Upload artifacts
