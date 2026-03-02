@@ -10,11 +10,17 @@ class StatusBar:
 
         self.clock_widget = urwid.Text(("clock", ""), align="right")
         self.status_bar = urwid.AttrMap(
-            urwid.Columns([self.status, self.clock_widget]), "status"
+            urwid.Columns(
+                [
+                    self.status,
+                    ("fixed", 17, self.clock_widget),
+                ]
+            ),
+            "status",
         )
 
     def update_clock(self):
-        now = datetime.now().strftime("%Y-%m-%d (%a) - %H:%M:%S")
+        now = datetime.now().strftime("%Y-%m-%d (%a)")
         self.clock_widget.set_text(("clock", f"{now} "))
 
     def _get_message(self, msgs: list[str]) -> str:
