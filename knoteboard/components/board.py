@@ -125,7 +125,9 @@ class Board:
         self.app.push_widget(form, ItemForm.STATUS_MSG)
 
     def edit_item(self):
-        current_item = self.items[self.focus_col][self.focus_idx]
+        if not (current_column := self.items[self.focus_col]):
+            return
+        current_item = current_column[self.focus_idx]
         form = ItemForm(
             on_submit=self._on_submit,
             on_cancel=lambda: self.app.pop_widget(),
