@@ -1,5 +1,6 @@
 import urwid
 
+from knoteboard.components.editbox import EditBox
 from knoteboard.models import ItemModel
 from knoteboard.utils import date_parse
 
@@ -45,7 +46,7 @@ class DateEdit(urwid.WidgetWrap):
 
     def __init__(self, date=None):
         self.date = date
-        self._edit = urwid.Edit(edit_text=self._get_date_text() if date else "")
+        self._edit = EditBox(edit_text=self._get_date_text() if date else "")
         self._hint = urwid.Text(("field-label", ""))
 
         edit_map = urwid.AttrMap(self._edit, "field-box", "field-box-focus")
@@ -92,7 +93,12 @@ class ItemForm(urwid.WidgetWrap):
     A form to create or edit a new item (ticket/note).
     """
 
-    STATUS_MSG = ["[Tab] - next field", "[Enter] - submit", "[Esc] - cancel"]
+    STATUS_MSG = [
+        "[Tab] - next field",
+        "[Alt-Enter / Ctrl-s] - submit",
+        "[Esc] - cancel",
+        "Emacs-style key bindings for editing",
+    ]
 
     def __init__(
         self, on_submit, on_cancel, edit_item: ItemModel | None = None
@@ -101,10 +107,10 @@ class ItemForm(urwid.WidgetWrap):
         self._on_cancel = on_cancel
         self.edit = bool(edit_item)
 
-        self._title_edit = urwid.Edit(
+        self._title_edit = EditBox(
             edit_text=edit_item.title if edit_item else ""
         )
-        self._desc_edit = urwid.Edit(
+        self._desc_edit = EditBox(
             edit_text=edit_item.description if edit_item else "", multiline=True
         )
         self._date_edit = DateEdit(edit_item.date if edit_item else None)
@@ -198,7 +204,7 @@ class ItemForm(urwid.WidgetWrap):
             case "esc":
                 self._on_cancel()
                 return
-            case "enter":
+            case "meta enter" | "ctrl s":
                 self._submit()
             case "tab":
                 idx = self._items.focus
