@@ -29,9 +29,10 @@ class Dialog(urwid.WidgetWrap):
             urwid.Button(btn.text, on_press=btn.on_press, align="center")
             for btn in buttons
         ]
+        self.text = urwid.Text(message, align=align or "center")
         pile = urwid.Pile(
             [
-                urwid.Text(message, align=align or "center"),
+                self.text,
                 urwid.Divider(),
                 urwid.Columns(
                     [
@@ -51,6 +52,9 @@ class Dialog(urwid.WidgetWrap):
         )
         widget = urwid.AttrMap(urwid.Filler(pile), "dialog")
         super().__init__(widget)
+
+    def get_text_rows(self, width: int):
+        return self.text.rows((width,))
 
     def keypress(self, size, key):
         if callback := self.btn_keymap.get(key):
@@ -87,7 +91,8 @@ class DialogLauncher(urwid.PopUpLauncher):
         super().__init__(widget)
 
     def open(self, popup_widget, cols, rows):
-        width, height = 40, 10
+        width = 40
+        height = 5 + popup_widget.get_text_rows(width=width)
         self._popup_params = {
             "left": max(0, (cols - width) // 2),
             "top": max(0, (rows - width) // 2),
