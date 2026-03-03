@@ -12,6 +12,7 @@ class Board:
 
     columns: list[str]
     items: list[list[Item]]
+    terminal_columns: tuple[int]
     deleted: list[Item]
 
     focus_col: int
@@ -27,6 +28,9 @@ class Board:
         self.items = [
             [Item(item) for item in column.items] for column in data.columns
         ]
+        self.terminal_columns = tuple(
+            i for i, column in enumerate(data.columns) if column.terminal
+        )
         self.deleted = data.deleted or []
         self.changed = False
 
@@ -52,7 +56,12 @@ class Board:
         self._refresh_all()
 
     def get_items(self) -> list[Item]:
-        return [item for column_items in self.items for item in column_items]
+        return [
+            item
+            for column_items in self.items
+            for item in column_items
+            if not item.done
+        ]
 
     #
     # Rendering
@@ -188,6 +197,7 @@ class Board:
             self.items[remove_col].pop(remove_idx)
             self.focus_idx = 0 if column else self.focus_idx
             self.items[self.focus_col].insert(self.focus_idx, item)
+            item.set_done(done=self.focus_col in self.terminal_columns)
             self._refresh_all()
             self.changed = True
 
@@ -201,6 +211,7 @@ class Board:
                 ColumnModel(
                     label=column_title,
                     items=[item.get_model() for item in self.items[i]],
+                    terminal=(i in self.terminal_columns),
                 )
                 for i, column_title in enumerate(self.columns)
             ],

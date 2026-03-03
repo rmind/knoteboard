@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import urwid
 
 from knoteboard.components.editbox import EditBox
@@ -27,6 +29,9 @@ class Item:
     @property
     def done(self):
         return bool(self.data.completed_at)
+
+    def set_done(self, done: bool):
+        self.data.completed_at = datetime.now() if done else None
 
     def get_model(self) -> ItemModel:
         return self.data
