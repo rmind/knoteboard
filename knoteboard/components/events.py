@@ -41,7 +41,7 @@ class EventPanel:
         now = datetime.now()
         dated_items = (
             item.data
-            for item in self.board.get_items()
+            for item in self.board.get_items(ignore_done=True)
             if item.data.date and not item.done
         )
         earliest_items = sorted(dated_items, key=lambda item: item.date)

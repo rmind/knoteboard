@@ -55,12 +55,12 @@ class Board:
         self.focus_idx = 0
         self._refresh_all()
 
-    def get_items(self) -> list[Item]:
+    def get_items(self, ignore_done: bool = False) -> list[Item]:
         return [
             item
             for column_items in self.items
             for item in column_items
-            if not item.done
+            if (not ignore_done or not item.done)
         ]
 
     #

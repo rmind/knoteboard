@@ -4,6 +4,7 @@ from knoteboard.components import (
     Board,
     DialogLauncher,
     EventPanel,
+    SearchPanel,
     StatusBar,
     info_msg,
 )
@@ -86,6 +87,7 @@ class App:
 
         self.status_bar = StatusBar(self.STATUS_MSG)
         self.board = Board(self, state.board)
+        self.search = SearchPanel(self)
         self.events = EventPanel(self, self.board)
         self.events.update()
         self.widgets = []
@@ -200,6 +202,8 @@ class App:
                 self.board.edit_item()
             case "d":
                 self.board.delete_item()
+            case "/":
+                self.search.open(self.body)
             case "?":
                 self.open_dialog(
                     info_msg(self._get_help_msg(), self, align="left")

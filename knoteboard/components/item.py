@@ -133,10 +133,18 @@ class ItemForm(urwid.WidgetWrap):
         )
 
         btn_ok = urwid.AttrMap(
-            urwid.Button("OK", align="center"), "btn", "btn-focus"
+            urwid.Button(
+                "OK", align="center", on_press=lambda _: self._submit()
+            ),
+            "btn",
+            "btn-focus",
         )
         btn_cancel = urwid.AttrMap(
-            urwid.Button("Cancel", align="center"), "btn", "btn-focus"
+            urwid.Button(
+                "Cancel", align="center", on_press=lambda _: self._on_cancel()
+            ),
+            "btn",
+            "btn-focus",
         )
         buttons = urwid.Columns(
             [
