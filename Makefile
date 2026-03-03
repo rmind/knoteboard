@@ -12,6 +12,5 @@ release:
 
 release-minor:
 	uv version --bump minor
-	@ $(MAKE) release
 
 .PHONY: lint format release release-minor
