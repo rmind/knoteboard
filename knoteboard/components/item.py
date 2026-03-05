@@ -14,6 +14,8 @@ class Item:
     """
 
     data: ItemModel
+    column: int | None = None
+    row: int | None = None
 
     def __init__(self, data: ItemModel):
         self.data = data
@@ -32,6 +34,10 @@ class Item:
 
     def set_done(self, done: bool):
         self.data.completed_at = datetime.now() if done else None
+
+    def set_location(self, column: int, row: int):
+        self.column = column
+        self.row = row
 
     def get_model(self) -> ItemModel:
         return self.data

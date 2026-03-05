@@ -70,6 +70,7 @@ class Board:
     def _refresh_column(self, col: int):
         widgets = []
         for i, item in enumerate(self.items[col]):
+            item.set_location(col, i)
             focused = (col == self.focus_col) and (i == self.focus_idx)
             widgets.append(item.get_widget(focused=focused))
 
@@ -169,6 +170,11 @@ class Board:
     #
     # Navigation and moving
     #
+
+    def switch_to(self, column: int, index: int):
+        self.focus_col = column
+        self.focus_idx = index
+        self._refresh_all()
 
     def switch_item(self, column: int = 0, index: int = 0):
         new_focus_col = self.focus_col + column

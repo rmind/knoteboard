@@ -1,12 +1,14 @@
 import urwid
 
+from knoteboard.components import Item
 from knoteboard.components.editbox import EditBox
-from knoteboard.models import ItemModel
 
 
 class SearchPanel(urwid.WidgetWrap):
     STATUS_MSG = ["[Esc] - cancel", "[Tab] - next item", "[Enter] - open"]
     TOP_ITEMS = 10  # how many items to show
+
+    focus_item: Item
 
     def __init__(self, app):
         self.app = app
@@ -33,7 +35,7 @@ class SearchPanel(urwid.WidgetWrap):
         cols, _ = self.app.loop.screen.get_cols_rows()
         return cols
 
-    def _get_item_text(self, item: ItemModel) -> str:
+    def _get_item_text(self, item: Item) -> str:
         text = item.title
         if item.description:
             description = item.description.replace("\n", " ")
@@ -44,6 +46,7 @@ class SearchPanel(urwid.WidgetWrap):
 
     def _on_change(self, widget, text):
         self.results.clear()
+        self.focus_item = None
         if not (q := text.strip().lower()):
             return
         items = self.app.board.get_items()
@@ -60,7 +63,9 @@ class SearchPanel(urwid.WidgetWrap):
                     ),
                     "item" if self.results else "item-focus",
                 )
+                item_entry.user_data = item
                 self.results.append(item_entry)
+        self.focus_item = self.results[0] if self.results else None
 
     def _set_focus(self, direction: int):
         if self.results:
@@ -68,13 +73,20 @@ class SearchPanel(urwid.WidgetWrap):
             for i, item in enumerate(self.results):
                 item.attr_map = {None: "item-focus" if i == idx else "item"}
             self.results.set_focus(idx)
+            self.focus_item = self.results[idx]
+
+    def _submit(self):
+        if self.focus_item:
+            item = self.focus_item.user_data
+            self.app.board.switch_to(item.column, item.row)
+            self.app.board.edit_item()
 
     def keypress(self, size, key):
         match key:
             case "esc":
                 self.app.pop_widget()
-            # case "enter":
-            #    self._submit()
+            case "enter":
+                self._submit()
             case "tab" | "down":
                 self._set_focus(+1)
             case "shift tab" | "up":
