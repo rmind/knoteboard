@@ -32,7 +32,7 @@ class EventPanel:
 
     @staticmethod
     def _get_due_date(now: datetime, target_date: datetime):
-        ndays = (target_date - now).days
+        ndays = (target_date.date() - now.date()).days
         attr = deadline_to_color(ndays)
         expr = human_due_days(ndays)
         return (attr or "item", expr)
