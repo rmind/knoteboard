@@ -18,9 +18,7 @@ class Board:
     focus_col: int
     focus_idx: int
 
-    changed: bool
-
-    def __init__(self, app, data: BoardModel = None):
+    def __init__(self, app, data: BoardModel):
         self.app = app
 
         # Initialize columns and items.
@@ -32,7 +30,6 @@ class Board:
             i for i, column in enumerate(data.columns) if column.terminal
         )
         self.deleted = data.deleted or []
-        self.changed = False
 
         #
         # Setup the widget.
@@ -110,7 +107,7 @@ class Board:
             self.focus_idx = len(self.items[self.focus_col]) - 1
 
         self._refresh_column(self.focus_col)
-        self.changed = True
+        self.app.flag_changed()
         self.app.pop_widget()
 
     def _remove_item(self, col: int, idx: int):
@@ -120,7 +117,7 @@ class Board:
             self.deleted.append(item.get_model())
             self.focus_idx = max(min(self.focus_idx, len(col_items) - 1), 0)
             self._refresh_column(col)
-            self.changed = True
+            self.app.flag_changed()
         self.app.close_dialog()
 
     #
@@ -205,7 +202,7 @@ class Board:
             self.items[self.focus_col].insert(self.focus_idx, item)
             item.set_done(done=self.focus_col in self.terminal_columns)
             self._refresh_all()
-            self.changed = True
+            self.app.flag_changed()
 
     #
     # Other

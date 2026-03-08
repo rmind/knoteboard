@@ -6,6 +6,7 @@ from knoteboard.components import (
     EventPanel,
     SearchPanel,
     StatusBar,
+    TagPanel,
     info_msg,
 )
 from knoteboard.models import AppDataModel
@@ -23,6 +24,7 @@ class App:
         "[h/j/k/l] - navigation",
         "[Shift + h/j/k/l] - move item",
         "[/] - search",
+        "[t] - tags",
     ]
 
     PALETTE = (
@@ -78,6 +80,7 @@ class App:
 
     storage: Storage
     widgets: list[tuple]
+    changed: bool = False
     popup: bool = False
     refresh_in: int = 0
 
@@ -88,6 +91,7 @@ class App:
         self.status_bar = StatusBar(self.STATUS_MSG)
         self.board = Board(self, state.board)
         self.search = SearchPanel(self)
+        self.tags = TagPanel(self, state.tags)
         self.events = EventPanel(self, self.board)
         self.events.update()
         self.widgets = []
@@ -124,14 +128,18 @@ class App:
         self.loop.screen.set_terminal_properties(colors=2**24)
         self.loop.set_alarm_in(0, self._tick)
 
+    def flag_changed(self):
+        self.changed = True
+
     def _check_sync(self):
-        if not self.board.changed:
+        if not self.changed:
             return  # no status change
-        self.board.changed = False
+        self.changed = False
         self.events.update()
         self.storage.save(
             AppDataModel(
                 board=self.board.export(),
+                tags=self.tags.export(),
             )
         )
         self.flash_message("saved")
@@ -202,8 +210,12 @@ class App:
                 self.board.edit_item()
             case "d":
                 self.board.delete_item()
+
+            # Other panels
             case "/":
                 self.search.open(self.body)
+            case "t":
+                self.tags.open()
             case "?":
                 self.open_dialog(
                     info_msg(self._get_help_msg(), self, align="left")

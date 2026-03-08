@@ -42,8 +42,14 @@ class BoardModel(BaseModel):
         return self
 
 
+class TagModel(BaseModel):
+    name: str
+    color: str
+
+
 class AppDataModel(BaseModel):
     board: BoardModel
+    tags: list[TagModel] | None = None
 
     @classmethod
     def initialize(cls):

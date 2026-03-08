@@ -162,7 +162,7 @@ class ItemForm(urwid.WidgetWrap):
         #
         # Focusable items (in their order).
         #
-        self._items = urwid.SimpleFocusListWalker(
+        self._elements = urwid.SimpleFocusListWalker(
             [
                 self._labeled("Title", title_map),
                 self._labeled("Description", desc_map),
@@ -177,7 +177,7 @@ class ItemForm(urwid.WidgetWrap):
         #
         form_body = urwid.LineBox(
             urwid.AttrMap(
-                urwid.Padding(urwid.ListBox(self._items), left=1, right=1),
+                urwid.Padding(urwid.ListBox(self._elements), left=1, right=1),
                 "form-bg",
             ),
             title="EDIT ITEM" if self.edit else "ADD ITEM",
@@ -226,11 +226,11 @@ class ItemForm(urwid.WidgetWrap):
             case "meta enter" | "ctrl s":
                 self._submit()
             case "tab":
-                idx = self._items.focus
-                self._items.set_focus((idx + 1) % len(self._items))
+                idx = self._elements.focus
+                self._elements.set_focus((idx + 1) % len(self._elements))
             case "shift tab":
-                idx = self._items.focus
-                self._items.set_focus((idx - 1) % len(self._items))
+                idx = self._elements.focus
+                self._elements.set_focus((idx - 1) % len(self._elements))
             case _:
                 return self._w.keypress(size, key)
 
