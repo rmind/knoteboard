@@ -2,7 +2,14 @@ import urwid
 
 from knoteboard.components.dialog import Dialog, DialogButtons
 from knoteboard.components.item import Item, ItemForm
-from knoteboard.models import BoardModel, ColumnModel, ItemModel
+from knoteboard.components.tags import SetTagDialog
+from knoteboard.models import (
+    BoardModel,
+    ColumnModel,
+    ItemModel,
+    TagMap,
+    TagModel,
+)
 
 
 class Board:
@@ -18,13 +25,15 @@ class Board:
     focus_col: int
     focus_idx: int
 
-    def __init__(self, app, data: BoardModel):
+    def __init__(self, app, data: BoardModel, tag_map: TagMap):
         self.app = app
+        self.tag_map = tag_map
 
         # Initialize columns and items.
         self.columns = [column.label for column in data.columns]
         self.items = [
-            [Item(item) for item in column.items] for column in data.columns
+            [Item(item, tag_map) for item in column.items]
+            for column in data.columns
         ]
         self.terminal_columns = tuple(
             i for i, column in enumerate(data.columns) if column.terminal
@@ -59,6 +68,13 @@ class Board:
             for item in column_items
             if (not ignore_done or not item.done)
         ]
+
+    def _get_current_item(self) -> Item | None:
+        return (
+            self.items[self.focus_col][self.focus_idx]
+            if self.items[self.focus_col]
+            else None
+        )
 
     #
     # Rendering
@@ -103,7 +119,7 @@ class Board:
             item.update(data)
         else:
             # Add item the item.
-            self.items[self.focus_col].append(Item(data))
+            self.items[self.focus_col].append(Item(data, self.tag_map))
             self.focus_idx = len(self.items[self.focus_col]) - 1
 
         self._refresh_column(self.focus_col)
@@ -126,6 +142,7 @@ class Board:
 
     def create_item(self):
         form = ItemForm(
+            self.tag_map,
             on_submit=self._on_submit,
             on_cancel=lambda: self.app.pop_widget(),
         )
@@ -136,6 +153,7 @@ class Board:
             return
         current_item = current_column[self.focus_idx]
         form = ItemForm(
+            self.tag_map,
             on_submit=self._on_submit,
             on_cancel=lambda: self.app.pop_widget(),
             edit_item=current_item.data,
@@ -207,6 +225,15 @@ class Board:
     #
     # Other
     #
+
+    def tag_item(self):
+        if not (item := self._get_current_item()):
+            return
+        self.app.open_dialog(
+            SetTagDialog(self.app, item.data, self.tag_map),
+            ["[Tab] - next", "[Esc] - cancel", "[Enter] - select"],
+        )
+        self._refresh_column(self.focus_col)
 
     def export(self) -> BoardModel:
         return BoardModel(

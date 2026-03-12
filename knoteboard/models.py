@@ -11,6 +11,7 @@ class ItemModel(BaseModel):
     title: str
     description: str | None = None
     date: datetime | None = None
+    tag_id: str | None = None
 
     # Metadata:
     id: str = str(uuid())
@@ -43,8 +44,12 @@ class BoardModel(BaseModel):
 
 
 class TagModel(BaseModel):
+    id: str = str(uuid())
     name: str
     color: str
+
+
+TagMap = dict[str, TagModel]
 
 
 class AppDataModel(BaseModel):

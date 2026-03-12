@@ -1,7 +1,7 @@
 import urwid
 
 from knoteboard.components.editbox import EditBox
-from knoteboard.models import TagModel
+from knoteboard.models import ItemModel, TagMap, TagModel
 from knoteboard.palette import Palette
 
 
@@ -39,7 +39,7 @@ class TagPanel(urwid.WidgetWrap):
 
     def __init__(self, app, tags: list[TagModel] | None):
         self.app = app
-        self.tags = [(tag.name, tag.color) for tag in tags or []]
+        self.tags = [tag.model_copy() for tag in tags or []]
         self.color_idx = 0
 
         group = []
@@ -99,14 +99,15 @@ class TagPanel(urwid.WidgetWrap):
         )
         super().__init__(overlay)
 
-    def _get_tag_item(self, name, color):
+    @staticmethod
+    def _get_tag_item(name, color):
         bar = urwid.AttrMap(urwid.Text("   "), color)
         label = urwid.Text(("item", name))
         return urwid.Columns([("fixed", 3, bar), label], dividechars=1)
 
     def _refresh(self):
         items = []
-        for i, (name, color) in enumerate(sorted(self.tags)):
+        for i, tag in enumerate(sorted(self.tags, key=lambda t: t.name)):
             rm = urwid.AttrMap(
                 urwid.Button("✕", on_press=self._on_remove, user_data=i),
                 "orange-fg",
@@ -114,7 +115,7 @@ class TagPanel(urwid.WidgetWrap):
             )
             items.append(
                 urwid.Columns(
-                    [self._get_tag_item(name, color), ("fixed", 5, rm)],
+                    [self._get_tag_item(tag.name, tag.color), ("fixed", 5, rm)],
                     dividechars=1,
                 )
             )
@@ -135,7 +136,7 @@ class TagPanel(urwid.WidgetWrap):
             return
         # Add the new tag.
         color = self.TAG_COLORS[self.color_idx]
-        self.tags.append((name, color))
+        self.tags.append(TagModel(name=name, color=color))
         self.app.flag_changed()
         # Clear and refresh.
         self.elements.set_focus(1)
@@ -164,8 +165,61 @@ class TagPanel(urwid.WidgetWrap):
     def open(self):
         self.app.push_widget(self, self.STATUS_MSG)
 
+    def get_tag_map(self) -> TagMap:
+        return {tag.id: tag for tag in self.tags}
+
     def export(self) -> list[TagModel]:
         """
         Export the current tags.
         """
-        return [TagModel(name=name, color=color) for name, color in self.tags]
+        return [tag.model_copy() for tag in self.tags]
+
+
+class SetTagDialog(urwid.WidgetWrap):
+    def __init__(
+        self,
+        app,
+        item: ItemModel,
+        tag_map: TagMap,
+    ):
+        self.app = app
+        self.item = item
+
+        items = []
+        tags = [TagModel(id="", name="No tag", color="column")]
+        tags += sorted(tag_map.values(), key=lambda t: t.name)
+        for i, tag in enumerate(tags):
+            bar = urwid.AttrMap(urwid.Text("   "), tag.color)
+            tag_text = urwid.Button(
+                tag.name, on_press=self._on_select, user_data=tag.id
+            )
+            label = urwid.AttrMap(tag_text, "item", "item-focus")
+            items.append(
+                urwid.Columns([("fixed", 3, bar), label], dividechars=1)
+            )
+        tag_line_box = urwid.LineBox(
+            urwid.Padding(urwid.Pile(items), left=1, right=1),
+            title="Set tag",
+            title_attr="field-label",
+        )
+        self.widget = urwid.AttrMap(tag_line_box, "column")
+        super().__init__(self.widget)
+
+    def get_height(self, width: int):
+        return self.widget.rows((width,))
+
+    def _on_select(self, _, tag_id: str | None = None):
+        self.item.tag_id = tag_id if tag_id else None
+        self.app.flag_changed()
+        self.app.close_dialog()
+
+    def keypress(self, size, key):
+        match key:
+            case "tab":
+                self._w.keypress(size, "down")
+            case "shift tab":
+                self._w.keypress(size, "up")
+            case "esc":
+                self.app.close_dialog()
+            case _:
+                return self._w.keypress(size, key)

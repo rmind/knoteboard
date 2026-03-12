@@ -4,4 +4,4 @@ from knoteboard.components.events import EventPanel
 from knoteboard.components.item import Item, ItemForm
 from knoteboard.components.search import SearchPanel
 from knoteboard.components.status import StatusBar
-from knoteboard.components.tags import TagPanel
+from knoteboard.components.tags import SetTagDialog, TagPanel

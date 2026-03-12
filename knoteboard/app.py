@@ -25,6 +25,7 @@ class App:
         "[Shift + h/j/k/l] - move item",
         "[/] - search",
         "[t] - tags",
+        "[s] - set tag",
     ]
 
     PALETTE = (
@@ -89,9 +90,9 @@ class App:
         state = self.storage.load()
 
         self.status_bar = StatusBar(self.STATUS_MSG)
-        self.board = Board(self, state.board)
-        self.search = SearchPanel(self)
         self.tags = TagPanel(self, state.tags)
+        self.board = Board(self, state.board, self.tags.get_tag_map())
+        self.search = SearchPanel(self)
         self.events = EventPanel(self, self.board)
         self.events.update()
         self.widgets = []
@@ -211,11 +212,15 @@ class App:
             case "d":
                 self.board.delete_item()
 
+            # Tags
+            case "t":
+                self.tags.open()
+            case "s":
+                self.board.tag_item()
+
             # Other panels
             case "/":
                 self.search.open(self.body)
-            case "t":
-                self.tags.open()
             case "?":
                 self.open_dialog(
                     info_msg(self._get_help_msg(), self, align="left")

@@ -3,7 +3,7 @@ from datetime import datetime
 import urwid
 
 from knoteboard.components.editbox import EditBox
-from knoteboard.models import ItemModel
+from knoteboard.models import ItemModel, TagMap, TagModel
 from knoteboard.utils import date_parse
 
 
@@ -17,16 +17,24 @@ class Item:
     column: int | None = None
     row: int | None = None
 
-    def __init__(self, data: ItemModel):
+    def __init__(self, data: ItemModel, tag_map: TagMap):
         self.data = data
+        self.tag_map = tag_map
 
     def update(self, data: ItemModel):
+        """
+        Update the item data, but inherit the creation and completion
+        dates and tag ID.
+        """
         data.created_at = self.data.created_at
+        data.completed_at = self.data.created_at
+        data.tag_id = self.data.tag_id
         self.data = data
 
     @property
     def color(self):
-        return "yellow"  # default
+        tag = self.tag_map.get(self.data.tag_id)
+        return tag.color if tag else "yellow"  # default
 
     @property
     def done(self):
@@ -112,7 +120,11 @@ class ItemForm(urwid.WidgetWrap):
     ]
 
     def __init__(
-        self, on_submit, on_cancel, edit_item: ItemModel | None = None
+        self,
+        tag_map: TagMap,
+        on_submit,
+        on_cancel,
+        edit_item: ItemModel | None = None,
     ):
         self._on_submit = on_submit
         self._on_cancel = on_cancel
@@ -160,13 +172,19 @@ class ItemForm(urwid.WidgetWrap):
         )
 
         #
+        # Tag field
+        #
+
+        #
         # Focusable items (in their order).
         #
+        tag_field = self._get_tag_field(edit_item, tag_map)
         self._elements = urwid.SimpleFocusListWalker(
             [
                 self._labeled("Title", title_map),
                 self._labeled("Description", desc_map),
                 self._labeled("Target date", self._date_edit),
+                *tag_field,
                 urwid.Divider(),
                 buttons,
             ]
@@ -189,7 +207,7 @@ class ItemForm(urwid.WidgetWrap):
             align="center",
             width=("relative", 60),
             valign="middle",
-            height=("relative", 60),
+            height=("relative", 60 + (9 if tag_field else 0)),
             min_width=30,
             min_height=20,
         )
@@ -203,6 +221,30 @@ class ItemForm(urwid.WidgetWrap):
                 urwid.LineBox(widget),
             ]
         )
+
+    @classmethod
+    def _get_tag_field(cls, edit_item: ItemModel | None, tag_map: TagMap):
+        if (
+            edit_item
+            and edit_item.tag_id
+            and (tag := tag_map.get(edit_item.tag_id))
+        ):
+            tag_field = cls._labeled(
+                "Tag",
+                urwid.Columns(
+                    [
+                        (
+                            "fixed",
+                            1,
+                            urwid.AttrMap(urwid.Text(" "), tag.color),
+                        ),
+                        urwid.Text(tag.name),
+                    ],
+                    dividechars=1,
+                ),
+            )
+            return [tag_field]
+        return []
 
     def _submit(self):
         if self._date_edit.is_invalid():
