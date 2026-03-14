@@ -211,7 +211,7 @@ class SetTagDialog(urwid.WidgetWrap):
     def _on_select(self, _, tag_id: str | None = None):
         self.item.tag_id = tag_id if tag_id else None
         self.app.flag_changed()
-        self.app.close_dialog()
+        self.app.close_dialog(full_refresh=True)
 
     def keypress(self, size, key):
         match key:

@@ -246,7 +246,9 @@ class App:
         if status_msgs:
             self.status_bar.update(status_msgs)
 
-    def close_dialog(self):
+    def close_dialog(self, full_refresh: bool = False):
+        if full_refresh:
+            self.board.refresh()
         self.root_launcher.close_pop_up()
         self.popup = False
         self._refresh()

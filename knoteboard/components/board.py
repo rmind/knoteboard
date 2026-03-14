@@ -59,7 +59,7 @@ class Board:
         # Load the items.
         self.focus_col = 0
         self.focus_idx = 0
-        self._refresh_all()
+        self.refresh()
 
     def get_items(self, ignore_done: bool = False) -> list[Item]:
         return [
@@ -102,7 +102,7 @@ class Board:
                 urwid.Text((attr, f" {title}"), align="center"), attr
             )
 
-    def _refresh_all(self):
+    def refresh(self):
         self.widget.focus_position = self.focus_col
         for i, _ in enumerate(self.columns):
             self._refresh_column(i)
@@ -189,7 +189,7 @@ class Board:
     def switch_to(self, column: int, index: int):
         self.focus_col = column
         self.focus_idx = index
-        self._refresh_all()
+        self.refresh()
 
     def switch_item(self, column: int = 0, index: int = 0):
         new_focus_col = self.focus_col + column
@@ -199,7 +199,7 @@ class Board:
         new_focus_idx = self.focus_idx + index
         self.focus_idx = max(min(new_focus_idx, nitems - 1), 0)
 
-        self._refresh_all()
+        self.refresh()
 
     def move_item(self, column: int = 0, index: int = 0):
         if not self.items[self.focus_col]:
@@ -219,7 +219,7 @@ class Board:
             self.focus_idx = 0 if column else self.focus_idx
             self.items[self.focus_col].insert(self.focus_idx, item)
             item.set_done(done=self.focus_col in self.terminal_columns)
-            self._refresh_all()
+            self.refresh()
             self.app.flag_changed()
 
     #
