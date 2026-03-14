@@ -2,12 +2,11 @@ import urwid
 
 from knoteboard.components.dialog import Dialog, DialogButtons
 from knoteboard.components.item import Item, ItemForm
-from knoteboard.components.tags import SetTagDialog
+from knoteboard.components.tags import SetTagDialog, TagPanel
 from knoteboard.models import (
     BoardModel,
     ColumnModel,
     ItemModel,
-    TagMap,
     TagModel,
 )
 
@@ -25,11 +24,12 @@ class Board:
     focus_col: int
     focus_idx: int
 
-    def __init__(self, app, data: BoardModel, tag_map: TagMap):
+    def __init__(self, app, data: BoardModel, tags: TagPanel):
         self.app = app
-        self.tag_map = tag_map
+        self.tags = tags
 
         # Initialize columns and items.
+        tag_map = tags.get_tag_map()
         self.columns = [column.label for column in data.columns]
         self.items = [
             [Item(item, tag_map) for item in column.items]
@@ -119,7 +119,9 @@ class Board:
             item.update(data)
         else:
             # Add item the item.
-            self.items[self.focus_col].append(Item(data, self.tag_map))
+            self.items[self.focus_col].append(
+                Item(data, self.tags.get_tag_map())
+            )
             self.focus_idx = len(self.items[self.focus_col]) - 1
 
         self._refresh_column(self.focus_col)
@@ -142,7 +144,7 @@ class Board:
 
     def create_item(self):
         form = ItemForm(
-            self.tag_map,
+            self.tags.get_tag_map(),
             on_submit=self._on_submit,
             on_cancel=lambda: self.app.pop_widget(),
         )
@@ -153,7 +155,7 @@ class Board:
             return
         current_item = current_column[self.focus_idx]
         form = ItemForm(
-            self.tag_map,
+            self.tags.get_tag_map(),
             on_submit=self._on_submit,
             on_cancel=lambda: self.app.pop_widget(),
             edit_item=current_item.data,
@@ -230,7 +232,7 @@ class Board:
         if not (item := self._get_current_item()):
             return
         self.app.open_dialog(
-            SetTagDialog(self.app, item.data, self.tag_map),
+            SetTagDialog(self.app, item.data, self.tags.get_tag_map()),
             ["[Tab] - next", "[Esc] - cancel", "[Enter] - select"],
         )
         self._refresh_column(self.focus_col)

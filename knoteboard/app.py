@@ -91,7 +91,7 @@ class App:
 
         self.status_bar = StatusBar(self.STATUS_MSG)
         self.tags = TagPanel(self, state.tags)
-        self.board = Board(self, state.board, self.tags.get_tag_map())
+        self.board = Board(self, state.board, self.tags)
         self.search = SearchPanel(self)
         self.events = EventPanel(self, self.board)
         self.events.update()

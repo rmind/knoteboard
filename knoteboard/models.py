@@ -4,7 +4,7 @@ try:
     from uuid import uuid7 as uuid
 except ImportError:
     from uuid import uuid4 as uuid
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class ItemModel(BaseModel):
@@ -44,7 +44,7 @@ class BoardModel(BaseModel):
 
 
 class TagModel(BaseModel):
-    id: str = str(uuid())
+    id: str = Field(default_factory=lambda: str(uuid()))
     name: str
     color: str
 

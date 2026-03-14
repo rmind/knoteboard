@@ -34,12 +34,12 @@ class TagPanel(urwid.WidgetWrap):
         "[Esc] - cancel",
     ]
 
-    tags: list[tuple[str, int]]
+    tags: TagMap
     color_idx: int
 
     def __init__(self, app, tags: list[TagModel] | None):
         self.app = app
-        self.tags = [tag.model_copy() for tag in tags or []]
+        self.tags = {tag.id: tag.model_copy() for tag in tags or []}
         self.color_idx = 0
 
         group = []
@@ -107,9 +107,9 @@ class TagPanel(urwid.WidgetWrap):
 
     def _refresh(self):
         items = []
-        for i, tag in enumerate(sorted(self.tags, key=lambda t: t.name)):
+        for tag in sorted(self.tags.values(), key=lambda t: t.name):
             rm = urwid.AttrMap(
-                urwid.Button("✕", on_press=self._on_remove, user_data=i),
+                urwid.Button("✕", on_press=self._on_remove, user_data=tag.id),
                 "orange-fg",
                 "red-fg",
             )
@@ -134,10 +134,12 @@ class TagPanel(urwid.WidgetWrap):
     def _on_add(self):
         if not (name := self.edit.edit_text.strip()):
             return
+
         # Add the new tag.
-        color = self.TAG_COLORS[self.color_idx]
-        self.tags.append(TagModel(name=name, color=color))
+        tag = TagModel(name=name, color=self.TAG_COLORS[self.color_idx])
+        self.tags[tag.id] = tag
         self.app.flag_changed()
+
         # Clear and refresh.
         self.elements.set_focus(1)
         self.edit.edit_text = ""
@@ -166,13 +168,13 @@ class TagPanel(urwid.WidgetWrap):
         self.app.push_widget(self, self.STATUS_MSG)
 
     def get_tag_map(self) -> TagMap:
-        return {tag.id: tag for tag in self.tags}
+        return self.tags
 
     def export(self) -> list[TagModel]:
         """
         Export the current tags.
         """
-        return [tag.model_copy() for tag in self.tags]
+        return [tag.model_copy() for tag in self.tags.values()]
 
 
 class SetTagDialog(urwid.WidgetWrap):
@@ -188,7 +190,7 @@ class SetTagDialog(urwid.WidgetWrap):
         items = []
         tags = [TagModel(id="", name="No tag", color="column")]
         tags += sorted(tag_map.values(), key=lambda t: t.name)
-        for i, tag in enumerate(tags):
+        for tag in tags:
             bar = urwid.AttrMap(urwid.Text("   "), tag.color)
             tag_text = urwid.Button(
                 tag.name, on_press=self._on_select, user_data=tag.id

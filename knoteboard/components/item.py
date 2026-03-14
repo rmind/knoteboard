@@ -13,6 +13,8 @@ class Item:
     the widget, including the item's current state.
     """
 
+    DEFAULT_TAG_COLOR = "yellow"
+
     data: ItemModel
     column: int | None = None
     row: int | None = None
@@ -27,14 +29,14 @@ class Item:
         dates and tag ID.
         """
         data.created_at = self.data.created_at
-        data.completed_at = self.data.created_at
+        data.completed_at = self.data.completed_at
         data.tag_id = self.data.tag_id
         self.data = data
 
     @property
     def color(self):
         tag = self.tag_map.get(self.data.tag_id)
-        return tag.color if tag else "yellow"  # default
+        return tag.color if tag else self.DEFAULT_TAG_COLOR
 
     @property
     def done(self):
