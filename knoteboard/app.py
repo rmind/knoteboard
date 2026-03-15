@@ -193,6 +193,10 @@ class App:
                 self.board.switch_item(index=-1)
             case "j" | "down":
                 self.board.switch_item(index=+1)
+            case "{":
+                self.board.switch_item(index=-10)
+            case "}":
+                self.board.switch_item(index=+10)
 
             # Moving the item
             case "L" | "shift right":
