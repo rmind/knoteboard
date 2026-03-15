@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 try:
     from uuid import uuid7 as uuid
@@ -18,6 +18,12 @@ class ItemModel(BaseModel):
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
     completed_at: datetime | None = None
+
+    def completed_ago(self, ndays: int) -> bool:
+        return bool(
+            self.completed_at
+            and (date.today() - self.completed_at.date()).days > ndays
+        )
 
 
 class ColumnModel(BaseModel):

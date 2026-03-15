@@ -16,6 +16,9 @@ class Board:
     Kanban-like board of items (tickets / notes).
     """
 
+    DELETE_COMPLETED = 7  # days
+    GC_DELETED = 30  # days
+
     columns: list[str]
     items: list[list[Item]]
     terminal_columns: tuple[int]
@@ -237,7 +240,31 @@ class Board:
         )
         self._refresh_column(self.focus_col)
 
+    def _cleanup_items(self):
+        # Move the old completed items to 'deleted' list.
+        for column, _ in enumerate(self.items):
+            to_delete = [
+                item.get_model()
+                for item in self.items[column]
+                if item.data.completed_ago(self.DELETE_COMPLETED)
+            ]
+            self.items[column] = [
+                item
+                for item in self.items[column]
+                if not item.data.completed_ago(self.DELETE_COMPLETED)
+            ]
+            self.deleted += to_delete
+
+        # G/C deleted items.
+        self.deleted = [
+            item_data
+            for item_data in self.deleted
+            if item_data.completed_at is not None
+            and not item_data.completed_ago(self.GC_DELETED)
+        ]
+
     def export(self) -> BoardModel:
+        self._cleanup_items()
         return BoardModel(
             columns=[
                 ColumnModel(
