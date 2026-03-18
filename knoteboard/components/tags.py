@@ -127,7 +127,6 @@ class TagPanel(urwid.WidgetWrap):
             self.color_idx = index
 
     def _on_cancel(self):
-        self.color_idx = 0
         self.edit.edit_text = ""
         self.app.pop_widget()
 
