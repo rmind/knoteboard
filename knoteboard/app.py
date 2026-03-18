@@ -2,6 +2,8 @@ import urwid
 
 from knoteboard.components import (
     Board,
+    Dialog,
+    DialogButtons,
     DialogLauncher,
     EventPanel,
     SearchPanel,
@@ -127,7 +129,7 @@ class App:
             pop_ups=True,
         )
         self.loop.screen.set_terminal_properties(colors=2**24)
-        self.loop.set_alarm_in(0, self._tick)
+        self._check_lock()
 
     def flag_changed(self):
         self.changed = True
@@ -257,5 +259,25 @@ class App:
         self.popup = False
         self._refresh()
 
+    def _check_lock(self):
+        if self.storage.ensure_locked():
+            return
+
+        def _do_exit():
+            raise urwid.ExitMainLoop()
+
+        self.open_dialog(
+            Dialog(
+                "Another instance has this board opened.",
+                buttons=[
+                    DialogButtons(
+                        text="Exit",
+                        on_press=lambda _: _do_exit(),
+                    ),
+                ],
+            )
+        )
+
     def run(self):
+        self.loop.set_alarm_in(0, self._tick)
         self.loop.run()

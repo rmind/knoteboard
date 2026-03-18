@@ -1,6 +1,38 @@
+import os
+from fcntl import LOCK_EX, LOCK_NB, LOCK_UN, flock
 from functools import cache
 
 from dateparser import DateDataParser
+
+
+class FileLock:
+    """
+    Wrapper for file (or directory) locking.
+    Just use a BSD-style advisory lock.
+    """
+
+    def __init__(self, path):
+        self.path = path
+        self.fd = 0
+
+    def __del__(self):
+        self.release()
+
+    def acquire(self) -> bool:
+        """
+        Acquire the lock; return True if acquired successfully.
+        """
+        self.fd = self.fd or os.open(self.path, os.O_RDONLY)
+        try:
+            flock(self.fd, LOCK_EX | LOCK_NB)
+        except BlockingIOError:
+            return False
+        return True
+
+    def release(self):
+        if self.fd:
+            os.close(self.fd)  # closing releases the lock too
+            self.fd = 0
 
 
 @cache
